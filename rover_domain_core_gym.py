@@ -34,7 +34,7 @@ class RoverDomainGym(SimulationCore):
 
         self.data["Number of Agents"] = nagent
         self.data["Number of POIs"] = 6
-        self.data["Minimum Distance"] = 4.0
+        
         self.data["Steps"] = nsteps
         self.data["Trains per Episode"] = 100
         self.data["Tests per Episode"] = 1
@@ -44,7 +44,8 @@ class RoverDomainGym(SimulationCore):
         self.data["World Index"] = 0
 
         self.data["Coupling"] = 3
-        self.data["Observation Radius"] = 4.1
+        self.data["Minimum Distance"] = 3.5
+        self.data["Observation Radius"] = 7.0
 
         # Add Rover Domain Construction Functionality
         # Note: reset() will generate random world based on seed
@@ -110,11 +111,11 @@ class RoverDomainGym(SimulationCore):
             data["Evaluation Function"]
         """
         
-        #self.data["Reward Function"] = rewards.assignDifferenceReward
-        #self.data["Evaluation Function"] = rewards.assignDifferenceReward
+        self.data["Reward Function"] = rewards.assignDifferenceReward
+        self.data["Evaluation Function"] = rewards.assignDifferenceReward
 
-        self.data["Reward Function"] = rewards.assignGlobalReward
-        self.data["Evaluation Function"] = rewards.assignGlobalReward
+        #self.data["Reward Function"] = rewards.assignGlobalReward
+        #self.data["Evaluation Function"] = rewards.assignGlobalReward
 
         self.worldTrainBeginFuncCol.append(createTrajectoryHistories)
         self.worldTrainStepFuncCol.append(updateTrajectoryHistories)

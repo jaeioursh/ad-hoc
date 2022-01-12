@@ -7,53 +7,55 @@ matplotlib.rcParams['pdf.fonttype'] = 42
 matplotlib.rcParams['ps.fonttype'] = 42
 
 from teaming import logger
-X=[i*100/(10000*16) for i in range(101)]
-#frqs=[1,10,100,1000,10000]
-#frqs=[1,2,3,4,6,8,12,16]
-frqs=[1,2,3,4,5,6,7,8]
-letter="qq"
 data=[]
 err=[]
+AGENTS=4
+ROBOTS=3
+ROWS=2
+COLS=2
 
+i=1
+
+q=4
+fname="tests/vary/"+str(AGENTS)+"-"+str(ROBOTS)+"-"+str(i)+"-"+str(q)+".pkl"
 
 log = logger.logger()
-log.load("tests/evo38-5.pkl")
-
+#log.load("tests/evo38-5.pkl")
+log.load(fname)
 p=log.pull("position")
 t=log.pull("types")
 tst=log.pull("test")
-print(tst)
+
 
 tst=np.array(tst)
 Tst=np.average(tst,axis=1)
 tst=tst[-1]
-print(tst)
+
 
 
 poi=log.pull("poi")[0]
-print(poi)
 
-idx=3
+
+
 nagents=len(t[0][0])
 pos=p
 
-custom_lines = [Line2D([0], [0], color="k", lw=2),
-                Line2D([0], [0], color="r", lw=2),
-                Line2D([0], [0], color="b", lw=2)]
+N=len(t[0])
 
-for idx in [20]:#range(50):
+for idx in range(N):
+    plt.subplot(ROWS,COLS,idx+1)#range(50):
+    #for idx in [40]:#range(50):
     #plt.ion()
-    plt.clf()
+    #plt.clf()
     #plt.subplot(1,2,1)
-    VALS=[0.1,0.1,0.5,0.3,0.0,0.0]
-    LOL=np.array([0,0,0,1,1,1])==1.0
+    VALS=[0.1, 0.2, 0.4,0.3, 0.1, 0.0]
+ 
     txt=[str(i) for i in VALS]
     vals=np.array(VALS)*0+1000
     
-    for i in range(len(txt)):
-        plt.text(poi[i,0]+3,poi[i,1]+2,txt[i])
+    
     typ=t[0][idx]
-    print(typ,tst[idx])
+
     for i in range(nagents):
         data=[]
         for j in range(len(pos)):
@@ -63,18 +65,26 @@ for idx in [20]:#range(50):
         data=np.array(data).T
         x,y=data
         tt=typ[i]
-        color=['k','r','b','m','y'][tt]
-        plt.plot(x,y,color,linewidth=2.5)
-    plt.scatter(poi[:,0][LOL],poi[:,1][LOL],s=vals[LOL],c='#1f77b4',marker="p",zorder=10000)
-    LOL=LOL==0
-    print(LOL)
-    plt.scatter(poi[:,0][LOL],poi[:,1][LOL],s=vals[LOL],c='#1f77b4',marker="^",zorder=10000)
+        color=[".",",","*","v","^","<",">","1","2","3","4","8"][tt]
+        plt.plot(x,y,color="k",marker=color,linewidth=1.0)
+
+    lgnd=["Policy "+str(i) for i in typ]
+    #print(lgnd)
+    plt.legend(lgnd)
+
+    for i in range(len(txt)):
+        plt.text(poi[i,0]+3,poi[i,1]+2,txt[i])
+
+    plt.scatter(poi[:,0],poi[:,1],c='#0000ff',marker="v",zorder=10000)
+
+
     #plt.title(str(idx)+':'+str(tst[idx]))
-    plt.legend(custom_lines, ['Agent Type A', 'Agent Type B', 'Agent Type C'])
-    if tst[idx]<0.6:
-        continue
+    
+    plt.title("score: "+str(round(tst[idx],3)))
+    #if tst[idx]<0.6:
+    #    continue
     #plt.subplot(1,2,2)
     #plt.plot(Tst)
-    plt.axes().set_aspect('equal', 'datalim')
+    #plt.axes().set_aspect('equal', 'datalim')
     #plt.pause(1.0)
 plt.show()
