@@ -1,46 +1,40 @@
-from copy import deepcopy as copy
+import torch
 import numpy as np
 
-def all_teams(k):
-    teams=[]
-    for i in range(k+1):
-        for j in range(k-i+1):
-            team=[0]*i+[1]*j+[2]*(k-j-i)
-            teams.append(team)
-            #print(team)
-    return teams
+class Net:
+    def __init__(self):
+        learning_rate=1e-2
+        self.model = torch.nn.Sequential(
+            torch.nn.Linear(8, 30),
+            torch.nn.Tanh(),
+            torch.nn.Linear(30,1)
+        )
+        self.loss_fn = torch.nn.MSELoss(reduction='sum')
+        self.optimizer = torch.optim.RMSprop(self.model.parameters(), lr=learning_rate)
 
-def helper(t,k,n):
-    if k==-1:
-        return [t]
-    lst=[]
-    for i in range(n):
-        if t[k+1]<=i:
-            t[k]=i
-            lst+=helper(copy(t),k-1,n)
-    return lst
-
-
-
-def a2(k,n):
-    t=[0]*k
-    lst=[]
-    for i in range(n):
-        t[k-1]=i
-        lst+=helper(copy(t),k-2,n)
-    return lst
+    def feed(self,x):
+        x=torch.from_numpy(x.astype(np.float32))
+        pred=self.model(x)
+        return pred.detach().numpy()
+        
+    
+    def train(self,x,y,n=5,verb=0):
+        x=torch.from_numpy(x.astype(np.float32))
+        y=torch.from_numpy(y.astype(np.float32))
+        pred=self.model(x)
+        loss=self.loss_fn(pred,y)
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+        return loss.detach().item()
 
 
+net=Net()
 
-#for i in range(2,16):
-#    print(i,len(all_teams(i)),len(a2(i,5)))
-teams=a2(16,5)
-print(len(teams))
-idxs=np.arange(len(teams))
-np.random.shuffle(idxs)
-idxs=idxs[:10]
-print(idxs)
-print(teams[idxs])
-#print (all_teams(3))
-#for k in a2(4,):
-#    print(k)
+x=np.random.random((4,8))
+y=np.random.random((4,1))
+
+net.feed(x)
+for i in range(100):
+
+    print(net.train(x,y))

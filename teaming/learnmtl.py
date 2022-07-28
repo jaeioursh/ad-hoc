@@ -2,35 +2,56 @@ import re
 import numpy as np
 #import tensorflow as tf
 import numpy as np
-import tensorflow as tf
+
 from copy import deepcopy as copy
 from .logger import logger
 import pyximport
 from .cceamtl import *
 from itertools import combinations
-from math import comb
+#from math import comb
 from collections import deque
 from random import sample
+import torch
+
+import operator as op
+from functools import reduce
+
+def comb(n, r):
+    r = min(r, n-r)
+    numer = reduce(op.mul, range(n, n-r, -1), 1)
+    denom = reduce(op.mul, range(1, r+1), 1)
+    return numer // denom  # or / in Python 2
 
 
 class Net:
-    def __init__(self):
-        init_fn=tf.keras.initializers.RandomNormal(stddev=0.01)
-        model = tf.keras.models.Sequential([
-            tf.keras.layers.Dense(16, activation='tanh',kernel_initializer=init_fn),
-            tf.keras.layers.Dense(50, activation='tanh',kernel_initializer=init_fn),
-            tf.keras.layers.Dense(1,activation='tanh',kernel_initializer=init_fn)
-        ])
-        self.model=model
-        loss_fn=tf.keras.losses.mean_squared_error
-        opt_fn=tf.keras.optimizers.Adam(learning_rate=1e-2)
-        self.model.compile(optimizer=opt_fn, loss=loss_fn)
+    def __init__(self,hidden=100):
+        learning_rate=1e-2
+        self.model = torch.nn.Sequential(
+            torch.nn.Linear(8, hidden),
+            torch.nn.Tanh(),
+            torch.nn.Linear(hidden, hidden),
+            torch.nn.Tanh(),
+            torch.nn.Linear(hidden,1)
+        )
+        self.loss_fn = torch.nn.MSELoss(reduction='sum')
+        self.optimizer = torch.optim.RMSprop(self.model.parameters(), lr=learning_rate)
 
     def feed(self,x):
-        return self.model(x).numpy()
+        x=torch.from_numpy(x.astype(np.float32))
+        pred=self.model(x)
+        return pred.detach().numpy()
+        
     
     def train(self,x,y,n=5,verb=0):
-        self.model.fit(x, y, epochs=n,verbose=verb)
+        x=torch.from_numpy(x.astype(np.float32))
+        y=torch.from_numpy(y.astype(np.float32))
+        pred=self.model(x)
+        loss=self.loss_fn(pred,y)
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+        return loss.detach().item()
+    
 
 def helper(t,k,n):
     if k==-1:
@@ -70,7 +91,7 @@ class learner:
         self.every_team=self.many_teams()
         self.test_teams=self.every_team
         sim.data["Number of Policies"]=32
-        initCcea(input_shape=8, num_outputs=2, num_units=20,num_types=types)(sim.data)
+        initCcea(input_shape=8, num_outputs=2, num_units=20, num_types=types)(sim.data)
         
 
     def act(self,S,data,trial):
@@ -97,10 +118,12 @@ class learner:
     def save(self,fname="log.pkl"):
         print("saved")
         self.log.save(fname)
+        netinfo={i:self.Dapprox[i].model.state_dict() for i in range(len(self.Dapprox))}
+        torch.save(netinfo,fname+".mdl")
 
     #train_flag=0 - D
     #train_flag=1 - Neural Net Approx of D
-    #train_flag=2 - Average D value recieved
+    #train_flag=2 - Approx, one at a time
     #train_flag=3 - G
     #train_flag=4 - D*
     def run(self,env,train_flag):
@@ -108,7 +131,7 @@ class learner:
         pop=env.data['Agent Populations']
         #team=self.team[0]
         G=[]
-        if train_flag==4:
+        if train_flag==4 or train_flag==1:
             self.team=self.every_team
         for worldIndex in range(populationSize):
             env.data["World Index"]=worldIndex
@@ -128,35 +151,34 @@ class learner:
                     S.append(s)
                     A.append(action)
                     s, r, done, info = env.step(action)
-                
+                #S,A=[S[-1]],[A[-1]]
                 pols=env.data["Agent Policies"] 
+                g=env.data["Global Reward"]
                 for i in range(len(s)):
                     #z=s2z(s,i)
                     d=r[i]
                     pols[i].D.append(d)
                     for j in range(len(S)):
-                        z=[S[j][i],A[j][i],d]
-                        if d!=0:
-                            self.hist[team[i]].append(z)
-                        else:
-                            self.zero[team[i]].append(z)
+                        z=[S[j][i],A[j][i],g]
+                        #if d!=0:
+                        self.hist[team[i]].append(z)
+                        #else:
+                        #    self.zero[team[i]].append(z)
+                    pols[i].Z.append(S[-1][i])
                         
-                        
-                
-                g=env.data["Global Reward"]
                 G.append(g)
             
-        if train_flag!=4:
+        if train_flag!=4 and train_flag!=1:
             train_set=self.team[0]
         else:
             train_set=[i for i in range(self.types)]
 
-        if train_flag==1:
+        if train_flag==1 or train_flag==2:
             self.updateD(env)
             
         for t in train_set:
-            if train_flag==1:
-                S_sample=self.state_sample(t)
+            #if train_flag==1:
+            #    S_sample=self.state_sample(t)
 
             for p in pop[t]:
                 
@@ -166,11 +188,12 @@ class learner:
                     p.D=[]
                 if train_flag==3:
                     p.fitness=g
-                if train_flag==2:
-                    p.fitness=np.mean(p.D)
-                if train_flag==1:
-                    self.approx(p,t,S_sample)
-                    
+
+                if train_flag==1 or train_flag==2:
+                    #self.approx(p,t,S_sample)
+                    p.fitness=np.sum(self.Dapprox[t].feed(np.array(p.Z)))
+                    #print(p.fitness)
+                    p.Z=[]
                     
                 if train_flag==0:
                     p.fitness=d
@@ -187,18 +210,18 @@ class learner:
         pop=env.data['Agent Populations']
         populationSize=len(pop[0])
         team=self.team[0]
-        
-        for i in team:
-            S,A,D=[],[],[]
-            SAD=robust_sample(self.hist[i],1000)
-            SAD+=robust_sample(self.zero[i],1000)
-            for samp in SAD:
-                S.append(samp[0])
-                A.append(samp[1])
-                D.append([samp[2]])
-            S,A,D=np.array(S),np.array(A),np.array(D)
-            Z=np.hstack((S,A))
-            self.Dapprox[i].train(Z,D)
+        for q in range(50):
+            for i in team:
+                S,A,D=[],[],[]
+                SAD=robust_sample(self.hist[i],100)
+                #SAD+=robust_sample(self.zero[i],100)
+                for samp in SAD:
+                    S.append(samp[0])
+                    A.append(samp[1])
+                    D.append([samp[2]])
+                S,A,D=np.array(S),np.array(A),np.array(D)
+                Z=S#np.hstack((S,A))
+                self.Dapprox[i].train(Z,D)
     def state_sample(self,t):
         S=[]
         A=[]

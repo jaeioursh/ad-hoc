@@ -703,3 +703,5 @@ def posInit(data,mu,sig):
 def multiType(sim):
     sim.data["Reward Function"]=assignGlobalRewardTypes
     sim.data["Observation Function"]=doAgentSenseTypes
+
+

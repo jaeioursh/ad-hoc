@@ -1,5 +1,5 @@
 CC = gcc
-PYVERSION=3.9
+PYVERSION=3.6
 FLAGS = -shared -pthread -fPIC -fwrapv -O2 -Wall -fno-strict-aliasing -I/usr/include/python${PYVERSION} -o
 
 default: part1 part2 part3 clean

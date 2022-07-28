@@ -11,6 +11,7 @@ import multiprocessing as mp
 from rover_domain_core_gym import RoverDomainGym
 import code.ccea_2 as ccea
 import code.agent_domain_2 as domain
+
 #import mods
 from teaming.learnmtl import learner
 from sys import argv
@@ -35,7 +36,7 @@ def rand_loc(n):
 
 #print(vals)
 def make_env(nagents):
-    vals =np.array([0.1, 0.2, 0.4,0.3, 0.1, 0.0])
+    vals =np.array([0.8,1.0,0.6,0.3,0.2,0.1])
     
     
     pos=np.array([
@@ -55,7 +56,7 @@ def make_env(nagents):
  
 
 
-    sim.data["Coupling"]=1
+    sim.data["Coupling"]=2
     sim.data['Number of Agents']=nagents
 
     obs=sim.reset()
@@ -96,13 +97,13 @@ def test1(trial,k,n,train_flag):
 
 
 
-if 0:
-    test1(42,4,3,4)
+if 1:
+    test1(42,5,4,1)
 else:
     for train in [1]:
         procs=[]
-        k=4
-        n=3
+        k=5
+        n=4
         for i in range(4):
             p=mp.Process(target=test1,args=(i,k,n,train))
             p.start()

@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
-from math import comb
+#from math import comb
 matplotlib.rcParams['pdf.fonttype'] = 42
 matplotlib.rcParams['ps.fonttype'] = 42
 
@@ -11,15 +11,15 @@ from teaming import logger
 #schedule = ["evo"+num,"base"+num,"EVO"+num]
 #schedule = ["base"+num+"_"+str(q) for q in [0.0,0.25,0.5,0.75,1.0]]
 AGENTS=5
-ROBOTS=3
-vals=sorted([0.1, 0.2, 0.4,0.3, 0.1, 0.0],reverse=True)
+ROBOTS=4
+vals=sorted([0.8,1.0,0.6,0.3,0.2,0.1],reverse=True)
 lbls={0:"D Rand.",1:"Approx",2:"D Avg.",3:"G",4:"D*"}
-max_val=sum(vals[:ROBOTS])
-for q in [4,2,0]:
+max_val=sum(vals[:ROBOTS//2])*5
+for q in [1]:
     T=[]
     R=[]
     print(q)
-    for i in range(4):
+    for i in [42]:
         log = logger.logger()
         
         log.load("tests/vary/"+str(AGENTS)+"-"+str(ROBOTS)+"-"+str(i)+"-"+str(q)+".pkl")
@@ -35,7 +35,7 @@ for q in [4,2,0]:
         
         print(np.round(t[-1,:],2))
         N=len(np.average(t,axis=0))
-        t=np.average(t,axis=1)
+        t=np.sum(t,axis=1)
         
         R.append(r)
         T.append(t)
@@ -51,7 +51,7 @@ for q in [4,2,0]:
     plt.plot(X,T,label=lbls[q])
     plt.fill_between(X,T-std,T+std,alpha=0.35, label='_nolegend_')
 
-    plt.ylim([0,1.15])
+    #plt.ylim([0,1.15])
     plt.grid(True)
 #plt.plot(X,[0.5]*101,"--")
 #plt.plot(X,[0.8]*101,"--")
