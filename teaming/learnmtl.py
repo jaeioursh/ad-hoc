@@ -114,7 +114,8 @@ class learner:
         teams.append(t)
         self.team=teams
         #self.team=np.random.randint(0,self.types,self.nagents)
-
+    def set_teams(self):
+        
     def save(self,fname="log.pkl"):
         print("saved")
         self.log.save(fname)
@@ -156,8 +157,8 @@ class learner:
                 g=env.data["Global Reward"]
                 for i in range(len(s)):
                     #z=s2z(s,i)
-                    d=r[i]
-                    pols[i].D.append(d)
+                    #d=r[i]
+                    #pols[i].D.append(d)
                     for j in range(len(S)):
                         z=[S[j][i],A[j][i],g]
                         #if d!=0:
@@ -191,7 +192,8 @@ class learner:
 
                 if train_flag==1 or train_flag==2:
                     #self.approx(p,t,S_sample)
-                    p.fitness=np.sum(self.Dapprox[t].feed(np.array(p.Z)))
+                    p.D=list(self.Dapprox[t].feed(np.array(p.Z)))
+                    p.fitness=np.sum(p.D)
                     #print(p.fitness)
                     p.Z=[]
                     

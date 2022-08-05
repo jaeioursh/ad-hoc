@@ -74,7 +74,6 @@ def test1(trial,k,n,train_flag):
 
     controller = learner(n,k,env)
     
-    controller.randomize()
 
     for i in range(4001):
 
