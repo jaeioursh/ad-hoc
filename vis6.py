@@ -9,14 +9,14 @@ matplotlib.rcParams['ps.fonttype'] = 42
 from teaming import logger
 data=[]
 err=[]
-AGENTS=4
-ROBOTS=3
-ROWS=2
-COLS=2
+AGENTS=5
+ROBOTS=4
+ROWS=1
+COLS=5
 
 i=1
 
-q=4
+q=1
 fname="tests/vary/"+str(AGENTS)+"-"+str(ROBOTS)+"-"+str(i)+"-"+str(q)+".pkl"
 
 log = logger.logger()
@@ -48,7 +48,7 @@ for idx in range(N):
     #plt.ion()
     #plt.clf()
     #plt.subplot(1,2,1)
-    VALS=[0.1, 0.2, 0.4,0.3, 0.1, 0.0]
+    VALS=[0.8,1.0,0.6,0.3,0.2,0.1]
  
     txt=[str(i) for i in VALS]
     vals=np.array(VALS)*0+1000
@@ -65,8 +65,9 @@ for idx in range(N):
         data=np.array(data).T
         x,y=data
         tt=typ[i]
-        color=[".",",","*","v","^","<",">","1","2","3","4","8"][tt]
-        plt.plot(x,y,color="k",marker=color,linewidth=1.0)
+        mkr=[".",",","*","v","^","<",">","1","2","3","4","8"][tt]
+        clr=["b","g","c","m","y","k","r","b","g","c","m","y"][tt]
+        plt.plot(x,y,color=clr,marker=mkr,linewidth=1.0)
 
     lgnd=["Policy "+str(i) for i in typ]
     #print(lgnd)

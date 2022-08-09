@@ -45,7 +45,7 @@ class RoverDomainGym(SimulationCore):
 
         self.data["Coupling"] = 3
         self.data["Minimum Distance"] = 3.5
-        self.data["Observation Radius"] = 7.0
+        self.data["Observation Radius"] = 6.0
 
         # Add Rover Domain Construction Functionality
         # Note: reset() will generate random world based on seed

@@ -12,6 +12,7 @@ from itertools import combinations
 from collections import deque
 from random import sample
 import torch
+device = torch.device("cpu") 
 
 import operator as op
 from functools import reduce
@@ -81,8 +82,8 @@ class learner:
     def __init__(self,nagents,types,sim):
         self.log=logger()
         self.nagents=nagents
-        self.hist=[deque(maxlen=10000) for i in range(types)]
-        self.zero=[deque(maxlen=10000) for i in range(types)]
+        self.hist=[deque(maxlen=20000) for i in range(types)]
+        self.zero=[deque(maxlen=100) for i in range(types)]
         self.itr=0
         self.types=types
         self.team=[self.sample()]
@@ -115,10 +116,11 @@ class learner:
         self.team=teams
         #self.team=np.random.randint(0,self.types,self.nagents)
     def set_teams(self):
-        
+        pass
     def save(self,fname="log.pkl"):
         print("saved")
         self.log.save(fname)
+        #print(self.Dapprox[0].model.state_dict()['4.bias'].is_cuda)
         netinfo={i:self.Dapprox[i].model.state_dict() for i in range(len(self.Dapprox))}
         torch.save(netinfo,fname+".mdl")
 
@@ -183,7 +185,7 @@ class learner:
 
             for p in pop[t]:
                 
-                d=p.D[-1]
+                #d=p.D[-1]
                 if train_flag==4:
                     p.fitness=np.sum(p.D)
                     p.D=[]
@@ -265,6 +267,7 @@ class learner:
         Rs=[]
         teams=copy(self.test_teams)
         print(teams)
+        aprx=[]
         for i in range(len(teams)):
 
             
@@ -296,7 +299,13 @@ class learner:
                 s=sp
                 i+=1
             g=env.data["Global Reward"]
+            ap=[]
+            for t,State in zip(self.team[0],s):
+                
+                ap.append(self.Dapprox[t].feed(np.array(State)))
+            aprx.append([self.team[0],ap])
             Rs.append(g)
+        self.log.store("aprx",aprx)
         self.log.store("test",Rs)
         
         self.team=old_team

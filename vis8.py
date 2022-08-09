@@ -19,7 +19,7 @@ for q in [1]:
     T=[]
     R=[]
     print(q)
-    for i in [42]:
+    for i in [0,1,2]:
         log = logger.logger()
         
         log.load("tests/vary/"+str(AGENTS)+"-"+str(ROBOTS)+"-"+str(i)+"-"+str(q)+".pkl")
@@ -27,6 +27,17 @@ for q in [1]:
         r=log.pull("reward")
         #L=log.pull("loss")
         t=log.pull("test")
+        aprx=log.pull("aprx")
+        if 0:
+            for k in range(len(aprx)):
+                print(k*50,k)
+                arr=np.zeros((len(aprx[0]),AGENTS))
+                for i in range(len(arr)):
+                    team,vals=aprx[k][i]
+                    vals=np.array(vals).T[0]
+                    arr[i,team]=vals
+                print(arr)    
+                print(t[k])
         #print(t)
         r=np.array(r)
 

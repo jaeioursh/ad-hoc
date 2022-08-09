@@ -96,14 +96,14 @@ def test1(trial,k,n,train_flag):
 
 
 
-if 1:
+if 0:
     test1(42,5,4,1)
 else:
     for train in [1]:
         procs=[]
         k=5
         n=4
-        for i in range(4):
+        for i in range(3):
             p=mp.Process(target=test1,args=(i,k,n,train))
             p.start()
             time.sleep(0.05)
