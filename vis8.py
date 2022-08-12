@@ -15,11 +15,12 @@ ROBOTS=4
 vals=sorted([0.8,1.0,0.6,0.3,0.2,0.1],reverse=True)
 lbls={0:"D Rand.",1:"Approx",2:"D Avg.",3:"G",4:"D*"}
 max_val=sum(vals[:ROBOTS//2])*5
+mint=1e9
 for q in [1]:
     T=[]
     R=[]
     print(q)
-    for i in [0,1,2]:
+    for i in range(8):
         log = logger.logger()
         
         log.load("tests/vary/"+str(AGENTS)+"-"+str(ROBOTS)+"-"+str(i)+"-"+str(q)+".pkl")
@@ -42,17 +43,20 @@ for q in [1]:
         r=np.array(r)
 
         t=np.array(t)
-
+        mint=min(len(t),mint)
         
         print(np.round(t[-1,:],2))
         N=len(np.average(t,axis=0))
         t=np.sum(t,axis=1)
-        
+        plt.subplot(1,2,1)
+        plt.plot(t)
         R.append(r)
         T.append(t)
-    
+    plt.subplot(1,2,2)
+
     BEST=np.max(T,axis=0)
-    R=np.mean(R,axis=0)
+    #R=np.mean(R,axis=0)
+    T=[t[:mint] for t in T]
     std=np.std(T,axis=0)/np.sqrt(4)
     T=np.mean(T,axis=0)
     X=[i*50 for i in range(len(T))]

@@ -13,6 +13,11 @@ from collections import deque
 from random import sample
 import torch
 device = torch.device("cpu") 
+torch.autograd.set_detect_anomaly(False)
+torch.autograd.profiler.profile(False)
+torch.autograd.profiler.emit_nvtx(False)
+torch.set_num_threads(1)
+print("threads: ",torch.get_num_threads())
 
 import operator as op
 from functools import reduce
@@ -25,8 +30,8 @@ def comb(n, r):
 
 
 class Net:
-    def __init__(self,hidden=100):
-        learning_rate=1e-2
+    def __init__(self,hidden=200):
+        learning_rate=2e-3
         self.model = torch.nn.Sequential(
             torch.nn.Linear(8, hidden),
             torch.nn.Tanh(),
@@ -82,7 +87,7 @@ class learner:
     def __init__(self,nagents,types,sim):
         self.log=logger()
         self.nagents=nagents
-        self.hist=[deque(maxlen=20000) for i in range(types)]
+        self.hist=[deque(maxlen=10000) for i in range(types)]
         self.zero=[deque(maxlen=100) for i in range(types)]
         self.itr=0
         self.types=types
@@ -159,8 +164,8 @@ class learner:
                 g=env.data["Global Reward"]
                 for i in range(len(s)):
                     #z=s2z(s,i)
-                    #d=r[i]
-                    #pols[i].D.append(d)
+                    d=r[i]
+                    pols[i].D.append(d)
                     for j in range(len(S)):
                         z=[S[j][i],A[j][i],g]
                         #if d!=0:
@@ -200,6 +205,7 @@ class learner:
                     p.Z=[]
                     
                 if train_flag==0:
+                    d=p.D[-1]
                     p.fitness=d
         
 

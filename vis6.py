@@ -14,7 +14,7 @@ ROBOTS=4
 ROWS=1
 COLS=5
 
-i=1
+i=0
 
 q=1
 fname="tests/vary/"+str(AGENTS)+"-"+str(ROBOTS)+"-"+str(i)+"-"+str(q)+".pkl"

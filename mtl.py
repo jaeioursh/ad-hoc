@@ -97,13 +97,25 @@ def test1(trial,k,n,train_flag):
 
 
 if 0:
+    import cProfile, pstats, io
+    from pstats import SortKey
+    pr = cProfile.Profile()
+    pr.enable()
+    # ... do something ...
     test1(42,5,4,1)
+    pr.disable()
+    s = io.StringIO()
+    sortby = SortKey.CUMULATIVE
+    ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+    ps.print_stats()
+    print(s.getvalue())
+    
 else:
     for train in [1]:
         procs=[]
         k=5
         n=4
-        for i in range(3):
+        for i in range(8):
             p=mp.Process(target=test1,args=(i,k,n,train))
             p.start()
             time.sleep(0.05)
