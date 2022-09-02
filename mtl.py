@@ -65,7 +65,7 @@ def make_env(nagents):
 
 import time
 
-def test1(trial,k,n,train_flag):
+def test1(trial,k,n,train_flag,n_teams):
     #print(np.random.get_state())[1]    
     np.random.seed(int(time.time()*100000)%100000)
     env=make_env(n)
@@ -73,13 +73,16 @@ def test1(trial,k,n,train_flag):
     OBS=env.reset()
 
     controller = learner(n,k,env)
-    
+    #controller.set_teams(n_teams)
 
     for i in range(4001):
 
-        controller.randomize()
         
-        if i%50==0:
+        #controller.randomize()
+        if i%100==0:
+            controller.set_teams(n_teams)
+
+        if i%1==0:
             controller.test(env)
 
         r=controller.run(env,train_flag)# i%100 == -10)
@@ -113,10 +116,11 @@ if 0:
 else:
     for train in [1]:
         procs=[]
-        k=5
+        k=7
         n=4
-        for i in range(8):
-            p=mp.Process(target=test1,args=(i,k,n,train))
+        teams=10
+        for i in range(12,18):
+            p=mp.Process(target=test1,args=(i,k,n,train,teams))
             p.start()
             time.sleep(0.05)
             procs.append(p)

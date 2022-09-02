@@ -30,8 +30,8 @@ def comb(n, r):
 
 
 class Net:
-    def __init__(self,hidden=200):
-        learning_rate=2e-3
+    def __init__(self,hidden=20):
+        learning_rate=5e-3
         self.model = torch.nn.Sequential(
             torch.nn.Linear(8, hidden),
             torch.nn.Tanh(),
@@ -69,12 +69,7 @@ def helper(t,k,n):
             lst+=helper(copy(t),k-1,n)
     return lst
 
-def s2z(s,i):
-    s=s.copy()
-    row=s[i,:].copy()
-    s[i,:]=0
-    z=np.vstack((row,s))
-    return z.flatten()
+
 
 def robust_sample(data,n):
     if len(data)<n: 
@@ -91,9 +86,9 @@ class learner:
         self.zero=[deque(maxlen=100) for i in range(types)]
         self.itr=0
         self.types=types
-        self.team=[self.sample()]
+        self.team=[]
         self.Dapprox=[Net() for i in range(self.types)]
-        print(self.Dapprox)
+
         self.every_team=self.many_teams()
         self.test_teams=self.every_team
         sim.data["Number of Policies"]=32
@@ -120,8 +115,49 @@ class learner:
         teams.append(t)
         self.team=teams
         #self.team=np.random.randint(0,self.types,self.nagents)
-    def set_teams(self):
-        pass
+    def most_similar(self):
+        aprx=[self.aprx[i] for i in self.index]
+        n_teams=len(aprx)
+        dists=np.zeros((n_teams,n_teams))+1e9
+        for i in range(n_teams):
+            for j in range(n_teams):
+                if i!=j:
+                    t1,f1=aprx[i]
+                    t2,f2=aprx[j]
+                    f1,f2=np.array(f1),np.array(f2)
+                    diff=f1[np.in1d(t1,t2)]-f2[np.in1d(t2,t1)]
+                    dist=np.sqrt(np.sum(diff*diff))/np.sqrt(len(diff))
+                    dists[i,j]=dist 
+                    dists[j,i]=dist
+        return np.argmin(np.sum(dists,axis=0))
+        ind = np.unravel_index(np.argmin(dists, axis=None), dists.shape)
+        #print(ind)
+        if np.random.random()>0.5:
+            return ind[0]
+        else:
+            return ind[1]
+
+    def set_teams(self,N,rand=0):
+        if N >= len(self.every_team):
+            self.team=self.every_team
+            return
+        if len(self.team)==0:
+            self.index = np.random.choice(len(self.every_team), N, replace=False)  
+        else:
+            i=np.random.randint(0,len(self.every_team))
+            while i in self.index:
+                i=np.random.randint(0,len(self.every_team))
+            if rand:
+                j=np.random.randint(0,len(self.index))
+            else:
+                j=self.most_similar()
+            self.index[j]=i
+
+
+        self.index=np.sort(self.index)
+        self.team=[self.every_team[i] for i in self.index]
+
+
     def save(self,fname="log.pkl"):
         print("saved")
         self.log.save(fname)
@@ -135,12 +171,12 @@ class learner:
     #train_flag=3 - G
     #train_flag=4 - D*
     def run(self,env,train_flag):
+
         populationSize=len(env.data['Agent Populations'][0])
         pop=env.data['Agent Populations']
         #team=self.team[0]
         G=[]
-        if train_flag==4 or train_flag==1:
-            self.team=self.every_team
+        
         for worldIndex in range(populationSize):
             env.data["World Index"]=worldIndex
             
@@ -163,7 +199,7 @@ class learner:
                 pols=env.data["Agent Policies"] 
                 g=env.data["Global Reward"]
                 for i in range(len(s)):
-                    #z=s2z(s,i)
+
                     d=r[i]
                     pols[i].D.append(d)
                     for j in range(len(S)):
@@ -176,15 +212,11 @@ class learner:
                         
                 G.append(g)
             
-        if train_flag!=4 and train_flag!=1:
-            train_set=self.team[0]
-        else:
-            train_set=[i for i in range(self.types)]
 
         if train_flag==1 or train_flag==2:
             self.updateD(env)
-            
-        for t in train_set:
+        train_set=np.unique(np.array(self.team))
+        for t in np.unique(np.array(self.team)):
             #if train_flag==1:
             #    S_sample=self.state_sample(t)
 
@@ -217,11 +249,8 @@ class learner:
 
     def updateD(self,env):
         
-        pop=env.data['Agent Populations']
-        populationSize=len(pop[0])
-        team=self.team[0]
-        for q in range(50):
-            for i in team:
+        for i in np.unique(np.array(self.team)):
+            for q in range(50):
                 S,A,D=[],[],[]
                 SAD=robust_sample(self.hist[i],100)
                 #SAD+=robust_sample(self.zero[i],100)
@@ -272,7 +301,7 @@ class learner:
         self.log.store("poi vals",np.array(env.data['Poi Static Values']))
         Rs=[]
         teams=copy(self.test_teams)
-        print(teams)
+
         aprx=[]
         for i in range(len(teams)):
 
@@ -313,7 +342,7 @@ class learner:
             Rs.append(g)
         self.log.store("aprx",aprx)
         self.log.store("test",Rs)
-        
+        self.aprx=aprx
         self.team=old_team
 
     
@@ -334,7 +363,7 @@ class learner:
             for t in combinations(range(self.types),self.nagents):
                 teams.append(list(t))
         else:
-            for i in range(50):
+            for i in range(100):
                 teams.append(self.sample())
 
         return teams

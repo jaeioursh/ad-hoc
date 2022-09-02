@@ -10,17 +10,17 @@ from teaming import logger
 
 #schedule = ["evo"+num,"base"+num,"EVO"+num]
 #schedule = ["base"+num+"_"+str(q) for q in [0.0,0.25,0.5,0.75,1.0]]
-AGENTS=5
+AGENTS=7
 ROBOTS=4
 vals=sorted([0.8,1.0,0.6,0.3,0.2,0.1],reverse=True)
 lbls={0:"D Rand.",1:"Approx",2:"D Avg.",3:"G",4:"D*"}
-max_val=sum(vals[:ROBOTS//2])*5
+
 mint=1e9
 for q in [1]:
     T=[]
     R=[]
     print(q)
-    for i in range(8):
+    for i in range(12,18):
         log = logger.logger()
         
         log.load("tests/vary/"+str(AGENTS)+"-"+str(ROBOTS)+"-"+str(i)+"-"+str(q)+".pkl")
@@ -31,7 +31,7 @@ for q in [1]:
         aprx=log.pull("aprx")
         if 0:
             for k in range(len(aprx)):
-                print(k*50,k)
+                print(k*1,k)
                 arr=np.zeros((len(aprx[0]),AGENTS))
                 for i in range(len(arr)):
                     team,vals=aprx[k][i]
@@ -51,15 +51,17 @@ for q in [1]:
         plt.subplot(1,2,1)
         plt.plot(t)
         R.append(r)
+        print(i,t[-1])
         T.append(t)
     plt.subplot(1,2,2)
 
-    BEST=np.max(T,axis=0)
+    
     #R=np.mean(R,axis=0)
     T=[t[:mint] for t in T]
+    BEST=np.max(T,axis=0)
     std=np.std(T,axis=0)/np.sqrt(4)
     T=np.mean(T,axis=0)
-    X=[i*50 for i in range(len(T))]
+    X=[i*1 for i in range(len(T))]
     #plt.subplot(2,1,1)
     #plt.plot(BEST)
     #plt.subplot(2,1,2)
@@ -68,6 +70,8 @@ for q in [1]:
 
     #plt.ylim([0,1.15])
     plt.grid(True)
+plt.legend([str(i) for i in range(8)])
+max_val=sum(vals[:ROBOTS//2])*35
 #plt.plot(X,[0.5]*101,"--")
 #plt.plot(X,[0.8]*101,"--")
 #plt.legend(["Random Teaming + Types","Unique Learners","Types Only","Max single POI reward","Max reward"])
