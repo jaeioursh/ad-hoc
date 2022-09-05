@@ -79,7 +79,7 @@ def test1(trial,k,n,train_flag,n_teams):
 
         
         #controller.randomize()
-        if i%100==0:
+        if i%25==0:
             controller.set_teams(n_teams)
 
         if i%1==0:
@@ -119,7 +119,7 @@ else:
         k=7
         n=4
         teams=10
-        for i in range(12,18):
+        for i in range(6,12):
             p=mp.Process(target=test1,args=(i,k,n,train,teams))
             p.start()
             time.sleep(0.05)
@@ -127,3 +127,5 @@ else:
             #p.join()
         for p in procs:
             p.join()
+
+

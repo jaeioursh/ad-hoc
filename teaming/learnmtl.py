@@ -30,7 +30,7 @@ def comb(n, r):
 
 
 class Net:
-    def __init__(self,hidden=20):
+    def __init__(self,hidden=10):
         learning_rate=5e-3
         self.model = torch.nn.Sequential(
             torch.nn.Linear(8, hidden),
@@ -87,6 +87,7 @@ class learner:
         self.itr=0
         self.types=types
         self.team=[]
+        self.index=[]
         self.Dapprox=[Net() for i in range(self.types)]
 
         self.every_team=self.many_teams()
@@ -301,6 +302,9 @@ class learner:
         self.log.store("poi vals",np.array(env.data['Poi Static Values']))
         Rs=[]
         teams=copy(self.test_teams)
+        self.log.clear("teams")
+        self.log.store("teams",self.every_team)
+        self.log.store("idxs",self.index)
 
         aprx=[]
         for i in range(len(teams)):

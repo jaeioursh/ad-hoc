@@ -20,7 +20,7 @@ for q in [1]:
     T=[]
     R=[]
     print(q)
-    for i in range(12,18):
+    for i in range(6,12):
         log = logger.logger()
         
         log.load("tests/vary/"+str(AGENTS)+"-"+str(ROBOTS)+"-"+str(i)+"-"+str(q)+".pkl")

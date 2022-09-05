@@ -1,39 +1,57 @@
 import numpy as np
-import pyximport
-pyximport.install()
+import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+import matplotlib
+from termcolor import colored
+
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['ps.fonttype'] = 42
+
 from teaming import logger
-from teaming.learnmtl import Net
-AGENTS=4
-ROBOTS=3
 
-i=42
 
-q=4
+AGENTS=7
+ROBOTS=4
+ROWS=5
+COLS=7
+
+i=3
+
+q=1
 fname="tests/vary/"+str(AGENTS)+"-"+str(ROBOTS)+"-"+str(i)+"-"+str(q)+".pkl"
+
 
 log = logger.logger()
 #log.load("tests/evo38-5.pkl")
 log.load(fname)
-hist=log.pull("hist")[0]
-print(len(hist[0]))
 
-net=Net()
+t=log.pull("test")
+aprx=log.pull("aprx")
+teams=log.pull("teams")[0]
+index=log.pull("idxs")
+print(len(teams))
+def onclick(event):
+    for i in range(10):
+        print(" ")
+
+    x=int(event.xdata)
+    x=max(min(len(t)-1,x),0)
+    arx=[y[1] for y in aprx[x]]
+    arx=np.array(arx)
+    for i in range(len(t[0])):
+
+        val=np.round(t[x][i],3)
+        if i in list(index[x]):
+            print(colored(i,"yellow"),colored(val,"yellow"),end=" ")
+        else:
+            print(i,val,end=" ")
+        print(teams[i],np.round(arx[i].T[0],2))
 
 
-S,A,D=[],[],[]
-            
-for samp in hist[0]:
-    S.append(samp[0])
-    A.append(samp[1])
-    D.append([samp[2]])
+plt.plot(np.sum(t,axis=1))
+btn='motion_notify_event'
+#btn='button_press_event''
+cid = plt.gcf().canvas.mpl_connect(btn, onclick)
 
-S,A,D=np.array(S),np.array(A),np.array(D)
-Z=np.hstack((S,A))
-net.train(Z,D,10,2)
-d=net.feed(Z)
-print(np.mean(np.square(d-D)))
-print(np.count_nonzero(D))
-print(np.mean(D),np.mean(d))
-print(np.min(D),np.min(d))
-print(np.max(D),np.max(d))
-print(d-D)
+plt.show()
+
