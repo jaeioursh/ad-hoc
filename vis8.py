@@ -10,11 +10,11 @@ from teaming import logger
 
 #schedule = ["evo"+num,"base"+num,"EVO"+num]
 #schedule = ["base"+num+"_"+str(q) for q in [0.0,0.25,0.5,0.75,1.0]]
-AGENTS=7
+AGENTS=5
 ROBOTS=4
 vals=sorted([0.8,1.0,0.6,0.3,0.2,0.1],reverse=True)
-lbls={0:"D Rand.",1:"Approx",2:"D Avg.",3:"G",4:"D*"}
-
+lbls={0:"D Rand.",1:"Approx",2:"D Avg.",3:"G",4:"D*",5:"G*"}
+plt.subplot(1,2,1)
 mint=1e9
 for q in [1]:
     T=[]
@@ -48,7 +48,7 @@ for q in [1]:
         print(np.round(t[-1,:],2))
         N=len(np.average(t,axis=0))
         t=np.sum(t,axis=1)
-        plt.subplot(1,2,1)
+       
         plt.plot(t)
         R.append(r)
         print(i,t[-1])

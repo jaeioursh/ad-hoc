@@ -30,7 +30,7 @@ def comb(n, r):
 
 
 class Net:
-    def __init__(self,hidden=10):
+    def __init__(self,hidden=20):
         learning_rate=5e-3
         self.model = torch.nn.Sequential(
             torch.nn.Linear(8, hidden),
@@ -40,8 +40,9 @@ class Net:
             torch.nn.Linear(hidden,1)
         )
         self.loss_fn = torch.nn.MSELoss(reduction='sum')
-        self.optimizer = torch.optim.RMSprop(self.model.parameters(), lr=learning_rate)
 
+        #self.optimizer = torch.optim.RMSprop(self.model.parameters(), lr=learning_rate)
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=learning_rate)
     def feed(self,x):
         x=torch.from_numpy(x.astype(np.float32))
         pred=self.model(x)
@@ -137,6 +138,24 @@ class learner:
             return ind[0]
         else:
             return ind[1]
+    def minmax(self):
+        index=[]
+        idxs=[[] for i in range(self.types)]
+        for j in range(len(self.aprx)):
+            aprx=self.aprx[j]
+            for i in range(len(aprx[0])):
+                t,f=aprx[0][i],aprx[1][i]
+
+                idxs[t].append([j,f])
+        for i in idxs:
+            index.append(min(i,key=lambda x:x[1])[0])
+            index.append(max(i,key=lambda x:x[1])[0])
+    
+        return np.unique(index)
+
+
+            
+
 
     def set_teams(self,N,rand=0):
         if N >= len(self.every_team):
@@ -144,6 +163,8 @@ class learner:
             return
         if len(self.team)==0:
             self.index = np.random.choice(len(self.every_team), N, replace=False)  
+        elif 1:
+            self.index=self.minmax()
         else:
             i=np.random.randint(0,len(self.every_team))
             while i in self.index:
@@ -153,6 +174,8 @@ class learner:
             else:
                 j=self.most_similar()
             self.index[j]=i
+        
+            
 
 
         self.index=np.sort(self.index)
@@ -163,14 +186,15 @@ class learner:
         print("saved")
         self.log.save(fname)
         #print(self.Dapprox[0].model.state_dict()['4.bias'].is_cuda)
-        netinfo={i:self.Dapprox[i].model.state_dict() for i in range(len(self.Dapprox))}
-        torch.save(netinfo,fname+".mdl")
+        #netinfo={i:self.Dapprox[i].model.state_dict() for i in range(len(self.Dapprox))}
+        #torch.save(netinfo,fname+".mdl")
 
     #train_flag=0 - D
     #train_flag=1 - Neural Net Approx of D
     #train_flag=2 - Approx, one at a time
     #train_flag=3 - G
     #train_flag=4 - D*
+    #train_flag=5 - G*
     def run(self,env,train_flag):
 
         populationSize=len(env.data['Agent Populations'][0])
@@ -202,7 +226,10 @@ class learner:
                 for i in range(len(s)):
 
                     d=r[i]
-                    pols[i].D.append(d)
+                    if train_flag==4:
+                        pols[i].D.append(d)
+                    else:
+                        pols[i].D.append(g)
                     for j in range(len(S)):
                         z=[S[j][i],A[j][i],g]
                         #if d!=0:
@@ -224,7 +251,7 @@ class learner:
             for p in pop[t]:
                 
                 #d=p.D[-1]
-                if train_flag==4:
+                if train_flag==4 or train_flag==5:
                     p.fitness=np.sum(p.D)
                     p.D=[]
                 if train_flag==3:

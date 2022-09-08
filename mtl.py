@@ -79,14 +79,14 @@ def test1(trial,k,n,train_flag,n_teams):
 
         
         #controller.randomize()
-        if i%25==0:
+        if i%100==0:
             controller.set_teams(n_teams)
 
         if i%1==0:
             controller.test(env)
 
         r=controller.run(env,train_flag)# i%100 == -10)
-        print(i,r,controller.team[0])
+        print(i,r,len(controller.team))
         
             
         if i%50==0:
