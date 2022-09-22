@@ -84,7 +84,9 @@ cdef class Evo_MLP:
     cdef public list life
 
     cdef public list D
-    cdef public list Z 
+    cdef public list G
+    cdef public list Z
+    cdef public list S 
     cdef public int used
     
     def __init__(self, input_shape, num_outputs, num_units=16):
@@ -94,7 +96,9 @@ cdef class Evo_MLP:
         self.fitness = 0.0
         self.life = []
         self.D=[]
+        self.G=[]
         self.Z=[]
+        self.S=[]
         self.used=0
 
         # XAVIER INITIALIZATION

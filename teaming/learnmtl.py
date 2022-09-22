@@ -30,8 +30,8 @@ def comb(n, r):
 
 
 class Net:
-    def __init__(self,hidden=20):
-        learning_rate=5e-3
+    def __init__(self,hidden=30):
+        learning_rate=1e-3
         self.model = torch.nn.Sequential(
             torch.nn.Linear(8, hidden),
             torch.nn.Tanh(),
@@ -83,7 +83,7 @@ class learner:
     def __init__(self,nagents,types,sim):
         self.log=logger()
         self.nagents=nagents
-        self.hist=[deque(maxlen=10000) for i in range(types)]
+        self.hist=[deque(maxlen=20000) for i in range(types)]
         self.zero=[deque(maxlen=100) for i in range(types)]
         self.itr=0
         self.types=types
@@ -149,9 +149,28 @@ class learner:
                 idxs[t].append([j,f])
         for i in idxs:
             index.append(min(i,key=lambda x:x[1])[0])
-            index.append(max(i,key=lambda x:x[1])[0])
+            #index.append(max(i,key=lambda x:x[1])[0])
     
         return np.unique(index)
+
+    def minmaxsingle(self):
+        aprx=[self.aprx[i] for i in self.index]
+        avgs=[[] for i in range(self.types)]
+        for apr in aprx:
+            t,f=apr
+            for i in range(len(f)):
+                avgs[t[i]].append(f[i])
+        avgs=np.asanyarray(avgs,dtype=object)
+        avg=np.array([np.mean(a) for a in avgs])
+
+        dists=[]
+        for apr in aprx:
+            
+            t,f=apr
+            for i in range(len(f)):
+                f[i]=abs(f[i]-avg[t[i]])
+            dists.append(max(f))
+        return np.argmin(dists)
 
 
             
@@ -163,7 +182,7 @@ class learner:
             return
         if len(self.team)==0:
             self.index = np.random.choice(len(self.every_team), N, replace=False)  
-        elif 1:
+        elif 0:
             self.index=self.minmax()
         else:
             i=np.random.randint(0,len(self.every_team))
@@ -171,6 +190,8 @@ class learner:
                 i=np.random.randint(0,len(self.every_team))
             if rand:
                 j=np.random.randint(0,len(self.index))
+            elif 1:
+                j=self.minmaxsingle()
             else:
                 j=self.most_similar()
             self.index[j]=i
@@ -191,8 +212,8 @@ class learner:
 
     #train_flag=0 - D
     #train_flag=1 - Neural Net Approx of D
-    #train_flag=2 - Approx, one at a time
-    #train_flag=3 - G
+    #train_flag=2 - counterfactual-aprx
+    #train_flag=3 - fitness critic
     #train_flag=4 - D*
     #train_flag=5 - G*
     def run(self,env,train_flag):
@@ -226,22 +247,24 @@ class learner:
                 for i in range(len(s)):
 
                     d=r[i]
-                    if train_flag==4:
-                        pols[i].D.append(d)
-                    else:
-                        pols[i].D.append(g)
+                    
+                    pols[i].G.append(d)
+                    
+                    pols[i].D.append(g)
+                    pols[i].S.append([])
                     for j in range(len(S)):
                         z=[S[j][i],A[j][i],g]
                         #if d!=0:
                         self.hist[team[i]].append(z)
                         #else:
                         #    self.zero[team[i]].append(z)
+                        pols[i].S[-1].append(S[j][i])
                     pols[i].Z.append(S[-1][i])
                         
                 G.append(g)
             
 
-        if train_flag==1 or train_flag==2:
+        if train_flag==1 or train_flag==2 or train_flag==3:
             self.updateD(env)
         train_set=np.unique(np.array(self.team))
         for t in np.unique(np.array(self.team)):
@@ -251,16 +274,25 @@ class learner:
             for p in pop[t]:
                 
                 #d=p.D[-1]
-                if train_flag==4 or train_flag==5:
+                if train_flag==4:
                     p.fitness=np.sum(p.D)
                     p.D=[]
+                if  train_flag==5:
+                    p.fitness=np.sum(p.G)
+                    p.G=[]
                 if train_flag==3:
-                    p.fitness=g
-
+                    p.D=[np.max(self.Dapprox[t].feed(np.array(p.S[i]))) for i in range(len(p.S))]
+                    #p.D=[(self.Dapprox[t].feed(np.array(p.S[i])))[-1] for i in range(len(p.S))]
+                    #print(p.D)
+                    p.fitness=np.sum(p.D)
+                    p.S=[]
                 if train_flag==1 or train_flag==2:
                     #self.approx(p,t,S_sample)
                     p.D=list(self.Dapprox[t].feed(np.array(p.Z)))
                     p.fitness=np.sum(p.D)
+                    if train_flag==2:
+                        p.fitness=np.sum(p.G)-np.sum(p.D)
+                        p.G=[]
                     #print(p.fitness)
                     p.Z=[]
                     
@@ -278,7 +310,7 @@ class learner:
     def updateD(self,env):
         
         for i in np.unique(np.array(self.team)):
-            for q in range(50):
+            for q in range(25):
                 S,A,D=[],[],[]
                 SAD=robust_sample(self.hist[i],100)
                 #SAD+=robust_sample(self.zero[i],100)

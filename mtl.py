@@ -79,7 +79,7 @@ def test1(trial,k,n,train_flag,n_teams):
 
         
         #controller.randomize()
-        if i%100==0:
+        if i%10000==0:
             controller.set_teams(n_teams)
 
         if i%1==0:
@@ -97,7 +97,12 @@ def test1(trial,k,n,train_flag,n_teams):
             #controller.put("hist",controller.hist)
             controller.save("tests/vary/"+str(k)+"-"+str(n)+"-"+str(trial)+"-"+str(train_flag)+".pkl")
 
-
+    #train_flag=0 - D
+    #train_flag=1 - Neural Net Approx of D
+    #train_flag=2 - counterfactual-aprx
+    #train_flag=3 - fitness critic
+    #train_flag=4 - D*
+    #train_flag=5 - G*
 
 if 0:
     import cProfile, pstats, io
@@ -116,10 +121,10 @@ if 0:
 else:
     for train in [1]:
         procs=[]
-        k=7
-        n=4
-        teams=10
-        for i in range(6,12):
+        k=9
+        n=6
+        teams=20
+        for i in range(6):
             p=mp.Process(target=test1,args=(i,k,n,train,teams))
             p.start()
             time.sleep(0.05)

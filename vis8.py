@@ -1,3 +1,4 @@
+from urllib.request import CacheFTPHandler
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
@@ -6,28 +7,34 @@ matplotlib.rcParams['pdf.fonttype'] = 42
 matplotlib.rcParams['ps.fonttype'] = 42
 
 from teaming import logger
-
+DEBUG=0
 
 #schedule = ["evo"+num,"base"+num,"EVO"+num]
 #schedule = ["base"+num+"_"+str(q) for q in [0.0,0.25,0.5,0.75,1.0]]
-AGENTS=5
-ROBOTS=4
+AGENTS=9
+ROBOTS=6
 vals=sorted([0.8,1.0,0.6,0.3,0.2,0.1],reverse=True)
-lbls={0:"D Rand.",1:"Approx",2:"D Avg.",3:"G",4:"D*",5:"G*"}
-plt.subplot(1,2,1)
+lbls={0:"D Rand.",1:"Our Method",2:"Ctrfctl Aprx",3:"Fitness Critic",4:"D*",5:"G*"}
+if DEBUG:
+    plt.subplot(1,2,1)
 mint=1e9
-for q in [1]:
+for q in [1,3]:
     T=[]
     R=[]
     print(q)
-    for i in range(6,12):
+    for i in range(6):
         log = logger.logger()
         
-        log.load("tests/vary/"+str(AGENTS)+"-"+str(ROBOTS)+"-"+str(i)+"-"+str(q)+".pkl")
-       
+        try:
+            log.load("tests/vary/"+str(AGENTS)+"-"+str(ROBOTS)+"-"+str(i)+"-"+str(q)+".pkl")
+        except:
+            continue
+    
         r=log.pull("reward")
         #L=log.pull("loss")
         t=log.pull("test")
+        n_teams=len(t[0])
+        print(n_teams)
         aprx=log.pull("aprx")
         if 0:
             for k in range(len(aprx)):
@@ -48,12 +55,13 @@ for q in [1]:
         print(np.round(t[-1,:],2))
         N=len(np.average(t,axis=0))
         t=np.sum(t,axis=1)
-       
-        plt.plot(t)
+        if DEBUG:
+            plt.plot(t)
         R.append(r)
         print(i,t[-1])
         T.append(t)
-    plt.subplot(1,2,2)
+    if DEBUG:
+        plt.subplot(1,2,2)
 
     
     #R=np.mean(R,axis=0)
@@ -71,7 +79,7 @@ for q in [1]:
     #plt.ylim([0,1.15])
     plt.grid(True)
 plt.legend([str(i) for i in range(8)])
-max_val=sum(vals[:ROBOTS//2])*35
+max_val=sum(vals[:ROBOTS//2])*n_teams
 #plt.plot(X,[0.5]*101,"--")
 #plt.plot(X,[0.8]*101,"--")
 #plt.legend(["Random Teaming + Types","Unique Learners","Types Only","Max single POI reward","Max reward"])
