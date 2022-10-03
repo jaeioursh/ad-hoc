@@ -29,9 +29,9 @@ def comb(n, r):
     return numer // denom  # or / in Python 2
 
 
-class Net:
-    def __init__(self,hidden=30):
-        learning_rate=1e-3
+class Net():
+    def __init__(self,hidden=20):#*4
+        learning_rate=5e-3
         self.model = torch.nn.Sequential(
             torch.nn.Linear(8, hidden),
             torch.nn.Tanh(),
@@ -41,8 +41,8 @@ class Net:
         )
         self.loss_fn = torch.nn.MSELoss(reduction='sum')
 
-        #self.optimizer = torch.optim.RMSprop(self.model.parameters(), lr=learning_rate)
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=learning_rate)
+        self.optimizer = torch.optim.RMSprop(self.model.parameters(), lr=learning_rate)
+        #self.optimizer = torch.optim.Adam(self.model.parameters(), lr=learning_rate)
     def feed(self,x):
         x=torch.from_numpy(x.astype(np.float32))
         pred=self.model(x)
@@ -83,8 +83,7 @@ class learner:
     def __init__(self,nagents,types,sim):
         self.log=logger()
         self.nagents=nagents
-        self.hist=[deque(maxlen=20000) for i in range(types)]
-        self.zero=[deque(maxlen=100) for i in range(types)]
+        
         self.itr=0
         self.types=types
         self.team=[]
@@ -94,6 +93,10 @@ class learner:
         self.every_team=self.many_teams()
         self.test_teams=self.every_team
         sim.data["Number of Policies"]=32
+
+        self.hist=[deque(maxlen=len(self.test_teams)*2000) for i in range(types)]
+        self.zero=[deque(maxlen=100) for i in range(types)]
+
         initCcea(input_shape=8, num_outputs=2, num_units=20, num_types=types)(sim.data)
         
 
@@ -207,8 +210,8 @@ class learner:
         print("saved")
         self.log.save(fname)
         #print(self.Dapprox[0].model.state_dict()['4.bias'].is_cuda)
-        #netinfo={i:self.Dapprox[i].model.state_dict() for i in range(len(self.Dapprox))}
-        #torch.save(netinfo,fname+".mdl")
+        netinfo={i:self.Dapprox[i].model.state_dict() for i in range(len(self.Dapprox))}
+        torch.save(netinfo,fname+".mdl")
 
     #train_flag=0 - D
     #train_flag=1 - Neural Net Approx of D
@@ -248,9 +251,9 @@ class learner:
 
                     d=r[i]
                     
-                    pols[i].G.append(d)
+                    pols[i].G.append(g)
                     
-                    pols[i].D.append(g)
+                    pols[i].D.append(d)
                     pols[i].S.append([])
                     for j in range(len(S)):
                         z=[S[j][i],A[j][i],g]
@@ -276,31 +279,35 @@ class learner:
                 #d=p.D[-1]
                 if train_flag==4:
                     p.fitness=np.sum(p.D)
-                    p.D=[]
+
                 if  train_flag==5:
                     p.fitness=np.sum(p.G)
-                    p.G=[]
+
                 if train_flag==3:
-                    p.D=[np.max(self.Dapprox[t].feed(np.array(p.S[i]))) for i in range(len(p.S))]
+                    p.D=[self.Dapprox[t].feed(np.array(p.S[i])) for i in range(len(p.S))]
+                    self.log.store("ctime",[np.argmax(i) for i in p.D])
+                    p.D=[np.max(i) for i in p.D]
                     #p.D=[(self.Dapprox[t].feed(np.array(p.S[i])))[-1] for i in range(len(p.S))]
                     #print(p.D)
                     p.fitness=np.sum(p.D)
-                    p.S=[]
+                    
                 if train_flag==1 or train_flag==2:
                     #self.approx(p,t,S_sample)
                     p.D=list(self.Dapprox[t].feed(np.array(p.Z)))
                     p.fitness=np.sum(p.D)
                     if train_flag==2:
                         p.fitness=np.sum(p.G)-np.sum(p.D)
-                        p.G=[]
+                        
                     #print(p.fitness)
-                    p.Z=[]
+
                     
                 if train_flag==0:
                     d=p.D[-1]
                     p.fitness=d
-        
-
+                p.G=[]
+                p.D=[]
+                p.Z=[]
+                p.S=[]
         evolveCceaPolicies(env.data,train_set)
 
         self.log.store("reward",max(G))      
@@ -310,7 +317,7 @@ class learner:
     def updateD(self,env):
         
         for i in np.unique(np.array(self.team)):
-            for q in range(25):
+            for q in range(64):
                 S,A,D=[],[],[]
                 SAD=robust_sample(self.hist[i],100)
                 #SAD+=robust_sample(self.zero[i],100)

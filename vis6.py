@@ -12,15 +12,15 @@ if compact:
 from teaming import logger
 data=[]
 err=[]
-AGENTS=7
+AGENTS=5
 ROBOTS=4
 ROWS=5
-COLS=7
+COLS=1
 
-i=5
+i=4
 
-q=1
-fname="tests/vary/"+str(AGENTS)+"-"+str(ROBOTS)+"-"+str(i)+"-"+str(q)+".pkl"
+q=3
+fname="tests/very/"+str(AGENTS)+"-"+str(ROBOTS)+"-"+str(i)+"-"+str(q)+".pkl"
 
 log = logger.logger()
 #log.load("tests/evo38-5.pkl")

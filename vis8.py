@@ -5,20 +5,20 @@ import matplotlib
 #from math import comb
 matplotlib.rcParams['pdf.fonttype'] = 42
 matplotlib.rcParams['ps.fonttype'] = 42
-
+#matplotlib.rcParams['text.usetex'] = True
 from teaming import logger
 DEBUG=0
 
 #schedule = ["evo"+num,"base"+num,"EVO"+num]
 #schedule = ["base"+num+"_"+str(q) for q in [0.0,0.25,0.5,0.75,1.0]]
-AGENTS=9
-ROBOTS=6
+AGENTS=5
+ROBOTS=4
 vals=sorted([0.8,1.0,0.6,0.3,0.2,0.1],reverse=True)
-lbls={0:"D Rand.",1:"Our Method",2:"Ctrfctl Aprx",3:"Fitness Critic",4:"D*",5:"G*"}
+lbls={0:"D Rand.",1:"Our Method",2:"Ctrfctl. Aprx.",3:"Fitness Critic",4:"$D^\Sigma$",5:"$G^\Sigma$"}
 if DEBUG:
     plt.subplot(1,2,1)
 mint=1e9
-for q in [1,3]:
+for q in [1,3,4,5]:
     T=[]
     R=[]
     print(q)
@@ -26,7 +26,7 @@ for q in [1,3]:
         log = logger.logger()
         
         try:
-            log.load("tests/vary/"+str(AGENTS)+"-"+str(ROBOTS)+"-"+str(i)+"-"+str(q)+".pkl")
+            log.load("tests/very/"+str(AGENTS)+"-"+str(ROBOTS)+"-"+str(i)+"-"+str(q)+".pkl")
         except:
             continue
     
@@ -58,7 +58,7 @@ for q in [1,3]:
         if DEBUG:
             plt.plot(t)
         R.append(r)
-        print(i,t[-1])
+        print(q,i,t[-1])
         T.append(t)
     if DEBUG:
         plt.subplot(1,2,2)
@@ -84,16 +84,16 @@ max_val=sum(vals[:ROBOTS//2])*n_teams
 #plt.plot(X,[0.8]*101,"--")
 #plt.legend(["Random Teaming + Types","Unique Learners","Types Only","Max single POI reward","Max reward"])
 plt.xlabel("Generation")
-plt.title(str(ROBOTS)+" Robots, "+str(AGENTS)+" Agents")
+plt.title("Performance of " + str(AGENTS)+" Agents, Teams of "+str(ROBOTS))
 leg=plt.legend()
 for legobj in leg.legendHandles:
     legobj.set_linewidth(4.0)
 #leg=plt.legend(["Min","First Quartile","Median","Third Quartile","Max"])
 #for legobj in leg.legendHandles:
 #    legobj.set_linewidth(5.0)
-plt.ylabel("Average Score Across "+str(N)+" Teams")
+plt.ylabel("$G^\Sigma$ of "+str(N)+" Teams")
 print(len(T))
-plt.plot([0,X[-1]],[max_val,max_val],"--")
+plt.plot([0,X[-1]],[max_val,max_val],"--",label="Max Score")
 '''
 if num[1]=="5":
     plt.title("5 agents, coupling req. of 2")
