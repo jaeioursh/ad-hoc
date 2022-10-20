@@ -5,6 +5,7 @@ import matplotlib
 #from math import comb
 matplotlib.rcParams['pdf.fonttype'] = 42
 matplotlib.rcParams['ps.fonttype'] = 42
+plt.style.use('tableau-colorblind10')
 #matplotlib.rcParams['text.usetex'] = True
 from teaming import logger
 DEBUG=0
@@ -14,15 +15,22 @@ DEBUG=0
 AGENTS=5
 ROBOTS=4
 vals=sorted([0.8,1.0,0.6,0.3,0.2,0.1],reverse=True)
-lbls={0:"D Rand.",1:"Our Method",2:"Ctrfctl. Aprx.",3:"Fitness Critic",4:"$D^\Sigma$",5:"$G^\Sigma$"}
+lbls={0:"D Rand.",1:"End State Aprx.",2:"Ctrfctl. Aprx.",3:"MTFC (Our Method)",4:"$D^\Sigma$",5:"$G^\Sigma$"}
 if DEBUG:
     plt.subplot(1,2,1)
 mint=1e9
-for q in [1,3,4,5]:
+
+for q in [3,4,5,1,2]:
     T=[]
     R=[]
     print(q)
-    for i in range(6):
+    '''
+    if (q !=3 and q!=1) or AGENTS==5:
+        rmin,rmax=0,6
+    else:
+        rmin,rmax=12,18
+    '''
+    for i in range(12):
         log = logger.logger()
         
         try:
@@ -67,7 +75,7 @@ for q in [1,3,4,5]:
     #R=np.mean(R,axis=0)
     T=[t[:mint] for t in T]
     BEST=np.max(T,axis=0)
-    std=np.std(T,axis=0)/np.sqrt(4)
+    std=np.std(T,axis=0)/np.sqrt(18)
     T=np.mean(T,axis=0)
     X=[i*1 for i in range(len(T))]
     #plt.subplot(2,1,1)

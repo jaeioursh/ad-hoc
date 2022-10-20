@@ -88,7 +88,7 @@ def test1(trial,k,n,train_flag,n_teams):
 
         
         #controller.randomize()
-        if i%10000==0:
+        if i%100000==0:
             controller.set_teams(n_teams)
 
         if i%1==0:
@@ -104,7 +104,7 @@ def test1(trial,k,n,train_flag,n_teams):
             #controller.save("tests/jj"+str(121)+"-"+str(trial)+".pkl")
             #controller.log.clear("hist")
             #controller.put("hist",controller.hist)
-            controller.save("tests/vary/"+str(k)+"-"+str(n)+"-"+str(trial)+"-"+str(train_flag)+".pkl")
+            controller.save("tests/very/"+str(k)+"-"+str(n)+"-"+str(trial)+"-"+str(train_flag)+".pkl")
 
     #train_flag=0 - D
     #train_flag=1 - Neural Net Approx of D
@@ -128,13 +128,15 @@ if __name__=="__main__":
         print(s.getvalue())
         
     else:
-        for train in [1,3,4,5]:
+        for train in [3,4,5]:
             procs=[]
             k=5
             n=4
-            for k,n in [[5,4]]:
+            for k,n in [[7,4]]:
                 teams=100
-                for i in range(6):
+                for i in range(12,18):
+                    if train==1 or train==3:
+                        i-=12
                     p=mp.Process(target=test1,args=(i,k,n,train,teams))
                     p.start()
                     time.sleep(0.05)
@@ -143,4 +145,7 @@ if __name__=="__main__":
                 for p in procs:
                     p.join()
 
-
+# 100 - static
+# 200 - minimax single
+# 300 random
+# 400 most similar

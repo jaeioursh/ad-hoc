@@ -30,7 +30,7 @@ def comb(n, r):
 
 
 class Net():
-    def __init__(self,hidden=20):#*4
+    def __init__(self,hidden=20*4):#*4
         learning_rate=5e-3
         self.model = torch.nn.Sequential(
             torch.nn.Linear(8, hidden),
@@ -193,7 +193,7 @@ class learner:
                 i=np.random.randint(0,len(self.every_team))
             if rand:
                 j=np.random.randint(0,len(self.index))
-            elif 1:
+            elif 0:
                 j=self.minmaxsingle()
             else:
                 j=self.most_similar()

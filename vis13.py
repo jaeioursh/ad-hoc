@@ -12,12 +12,19 @@ if compact:
 from teaming import logger
 data=[]
 err=[]
+
+
+def shrink(data, cols):
+    data=np.array(data[:,:4000])
+    print(data.shape)
+    return data.reshape(data.shape[0], cols, 4000//cols).mean(axis=2)
+
 AGENTS=5
 ROBOTS=4
 
 
-i=12
-
+#i=12
+i=4
 fname="tests/vary/"+str(AGENTS)+"-"+str(ROBOTS)+"-"+str(i)+"-3.pkl"
 log = logger.logger()
 
@@ -31,9 +38,22 @@ times=times.flatten()
 print(times.shape)
 times=times.reshape((r,-1))
 probs=np.array([np.bincount(t,minlength=30).astype(float)/r for t in times])
-plt.imshow(probs.T,interpolation="none",aspect='auto')
+print(probs.shape)
+probs=shrink(probs.T,40)
+scale=np.sum(probs,axis=0)[0]
+probs/=scale
+#probs=np.log(probs)
+#probs[np.isinf(probs)]=-8
+plt.imshow(probs,interpolation="none",aspect='auto',cmap=matplotlib.colormaps["Reds"])
 plt.xlabel("Generation")
-plt.ylabel("Time Step")
-plt.colorbar(label="Probability of Being Chosen")
+plt.ylabel("Index Along State Trajectory")
+plt.colorbar(label="Probability of Being Max Valued")
 plt.tight_layout()
+
+tx=len(plt.gca().get_xticklabels())
+print(tx)
+x=[i*4 for i in range(tx)]
+labels=[str(i*100) for i in x]
+print(x,labels)
+plt.xticks(x, labels)
 plt.show()

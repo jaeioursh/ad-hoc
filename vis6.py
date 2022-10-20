@@ -14,7 +14,7 @@ data=[]
 err=[]
 AGENTS=5
 ROBOTS=4
-ROWS=5
+ROWS=1
 COLS=1
 
 i=4
@@ -71,26 +71,30 @@ for idx in range(N):
         tt=typ[i]
         mkr=[".",",","*","v","^","<",">","1","2","3","4","8"][tt]
         clr=["b","g","c","m","y","k","r","b","g","c","m","y"][tt]
-        plt.plot(x,y,color=clr,marker=mkr,linewidth=1.0)
-    if compact:
+        #mkr='*'
+        #clr="k"
+        plt.plot(x[0],y[0],color=clr,marker=mkr,linewidth=1.0)
+    if compact and 0:
         lgnd=[str(i) for i in typ]
     else:
-        lgnd=["Policy "+str(i) for i in typ]
+        lgnd=["Agent "+str(i) for i in typ]
         
     #print(lgnd)
+
     plt.legend(lgnd)
-    if compact:
+    if compact and 0:
         plt.xticks([])
         plt.yticks([])
     for i in range(len(txt)):
         plt.text(poi[i,0]+1,poi[i,1]+1,txt[i])
 
-    plt.scatter(poi[:,0],poi[:,1],c='#0000ff',marker="v",zorder=10000)
+    plt.scatter(poi[:,0],poi[:,1],s=100,c='#0000ff',marker="v",zorder=10000)
+    plt.xlim([-5,35])
+    plt.ylim([-5,35])
+    plt.title(str(idx)+':'+str(tst[idx]))
 
-
-    #plt.title(str(idx)+':'+str(tst[idx]))
     summ+=tst[idx]
-    plt.title("score: "+str(round(tst[idx],3)))
+    #plt.title("Team "+str(idx)+" Score: "+str(round(tst[idx],3)))
     #if tst[idx]<0.6:
     #    continue
     #plt.subplot(1,2,2)
@@ -99,5 +103,5 @@ for idx in range(N):
     #plt.pause(1.0)
 print(summ)
 if compact:
-    plt.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
+    plt.subplots_adjust(left=0.05, bottom=0.05, right=.95, top=.95, wspace=0.05, hspace=0.05)
 plt.show()
